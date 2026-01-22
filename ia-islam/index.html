@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IA ISLAM - Assistant Éducatif</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(to bottom, #fafaf9, #f5f5f4);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid #e7e5e4;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .header-content {
+            max-width: 56rem;
+            margin: 0 auto;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+        }
+
+        .header-text h1 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #292524;
+        }
+
+        .header-text p {
+            font-size: 0.75rem;
+            color: #78716c;
+        }
+
+        .container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem 1rem;
+        }
+
+        .messages {
+            max-width: 56rem;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .welcome {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 50vh;
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .welcome img {
+            width: 128px;
+            height: 128px;
+            margin-bottom: 1.5rem;
+            object-fit: contain;
+        }
+
+        .welcome h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #292524;
+            margin-bottom: 0.75rem;
+        }
+
+        .welcome p {
+            color: #78716c;
+            max-width: 28rem;
+        }
+
+        .message {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .avatar.ai {
+            background: white;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 4px;
+        }
+
+        .avatar.ai img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .avatar.user {
+            background: #e7e5e4;
+            color: #57534e;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .bubble {
+            max-width: 85%;
+            padding: 1rem 1.25rem;
+            border-radius: 16px;
+            word-wrap: break-word;
+        }
+
+        .bubble.user {
+            background: #059669;
+            color: white;
+            border-radius: 16px 16px 4px 16px;
+        }
+
+        .bubble.ai {
+            background: white;
+            border: 1px solid #e7e5e4;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            border-radius: 16px 16px 16px 4px;
+        }
+
+        .loading {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            color: #78716c;
+            font-size: 0.875rem;
+        }
+
+        .loading-dots {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: #059669;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .dot:nth-child(1) { animation-delay: -0.32s; }
+        .dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        .input-area {
+            position: sticky;
+            bottom: 0;
+            background: linear-gradient(to top, #f5f5f4, #f5f5f4, transparent);
+            padding: 1.5rem 1rem;
+        }
+
+        .input-container {
+            max-width: 56rem;
+            margin: 0 auto;
+        }
+
+        .input-box {
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-end;
+            padding: 1rem;
+            background: white;
+            border: 1px solid #e7e5e4;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        textarea {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-family: inherit;
+            font-size: 0.9375rem;
+            color: #292524;
+            resize: none;
+            min-height: 44px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        textarea::placeholder {
+            color: #a8a29e;
+        }
+
+        .send-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .send-btn:disabled {
+            background: #e7e5e4;
+            color: #a8a29e;
+            cursor: not-allowed;
+        }
+
+        .send-btn:not(:disabled) {
+            background: #059669;
+            color: white;
+            box-shadow: 0 10px 25px rgba(5, 150, 105, 0.2);
+        }
+
+        .send-btn:not(:disabled):hover {
+            background: #047857;
+        }
+
+        .hint {
+            text-align: center;
+            font-size: 0.75rem;
+            color: #a8a29e;
+            margin-top: 0.75rem;
+        }
+
+        @media (max-width: 640px) {
+            .logo { width: 32px; height: 32px; }
+            .avatar { width: 32px; height: 32px; }
+            .bubble { padding: 0.75rem 1rem; font-size: 0.875rem; }
+            .welcome img { width: 96px; height: 96px; }
+            .welcome h2 { font-size: 1.25rem; }
+            .hint { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6970b76c579f0b3ac47f48b8/ae70ac83f_imageislamiqueia.png" alt="IA Islam" class="logo">
+            <div class="header-text">
+                <h1>IA ISLAM</h1>
+                <p>Islam Sunnite</p>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="messages" id="messages">
+            <div class="welcome">
+                <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6970b76c579f0b3ac47f48b8/ae70ac83f_imageislamiqueia.png" alt="IA Islam">
+                <h2>Bienvenue</h2>
+                <p>Posez une question sur l'islam sunnite. Je m'appuie sur le Coran, les hadiths authentiques et les avis des savants reconnus.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="input-area">
+        <div class="input-container">
+            <form class="input-box" id="chatForm">
+                <textarea 
+                    id="userInput" 
+                    placeholder="Posez votre question sur l'islam..."
+                    rows="1"
+                ></textarea>
+                <button type="submit" class="send-btn" id="sendBtn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>
+                    </svg>
+                </button>
+            </form>
+            <p class="hint">Appuyez sur Entrée pour envoyer • Shift+Entrée pour un saut de ligne</p>
+        </div>
+    </div>
+
+    <script>
+        const messagesContainer = document.getElementById('messages');
+        const chatForm = document.getElementById('chatForm');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+
+        // URL de votre API Backend
+        const API_URL = 'https://6970b76c579f0b3ac47f48b8.base44.app/functions/askIA';
+
+        // Auto-resize textarea
+        userInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+        });
+
+        // Handle Enter key
+        userInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                chatForm.dispatchEvent(new Event('submit'));
+            }
+        });
+
+        // Remove welcome message
+        function removeWelcome() {
+            const welcome = messagesContainer.querySelector('.welcome');
+            if (welcome) welcome.remove();
+        }
+
+        // Add message to chat
+        function addMessage(content, isUser) {
+            removeWelcome();
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message' + (isUser ? ' user' : '');
+            
+            if (!isUser) {
+                messageDiv.innerHTML = `
+                    <div class="avatar ai">
+                        <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6970b76c579f0b3ac47f48b8/ae70ac83f_imageislamiqueia.png" alt="IA">
+                    </div>
+                    <div class="bubble ai">${formatMessage(content)}</div>
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="bubble user">${content}</div>
+                    <div class="avatar user">Vous</div>
+                `;
+            }
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Format AI message with markdown-like formatting
+        function formatMessage(text) {
+            // Simple formatting: bold, links, line breaks
+            text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            text = text.replace(/\[(.*?)\]\((.*?)\)/g, '<a href__="$2" target="_blank" style="color: #059669; text-decoration: none;">$1</a>');
+            text = text.replace(/\n/g, '<br>');
+            return text;
+        }
+
+        // Add loading indicator
+        function addLoading() {
+            removeWelcome();
+            
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'message';
+            loadingDiv.id = 'loading';
+            loadingDiv.innerHTML = `
+                <div class="avatar ai">
+                    <img src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/6970b76c579f0b3ac47f48b8/ae70ac83f_imageislamiqueia.png" alt="IA">
+                </div>
+                <div class="bubble ai">
+                    <div class="loading">
+                        <div class="loading-dots">
+                            <span class="dot"></span>
+                            <span class="dot"></span>
+                            <span class="dot"></span>
+                        </div>
+                        <span>Recherche dans les sources...</span>
+                    </div>
+                </div>
+            `;
+            
+            messagesContainer.appendChild(loadingDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Remove loading indicator
+        function removeLoading() {
+            const loading = document.getElementById('loading');
+            if (loading) loading.remove();
+        }
+
+        // Handle form submission
+        chatForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const question = userInput.value.trim();
+            if (!question) return;
+
+            // Check if first message
+            const isFirstMessage = messagesContainer.children.length === 1; // Only welcome div
+
+            // Disable input
+            sendBtn.disabled = true;
+            userInput.disabled = true;
+
+            // Add user message
+            addMessage(question, true);
+            userInput.value = '';
+            userInput.style.height = 'auto';
+
+            // Show loading
+            addLoading();
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ question, isFirstMessage })
+                });
+
+                const data = await response.json();
+
+                // Remove loading
+                removeLoading();
+
+                if (data.error) {
+                    addMessage('Erreur: ' + data.error, false);
+                } else {
+                    // Format response with sources
+                    let fullResponse = data.reponse;
+                    
+                    if (data.sources && data.sources.length > 0) {
+                        fullResponse += '\n\n**Sources:**\n';
+                        data.sources.forEach(source => {
+                            if (source.lien) {
+                                fullResponse += `\n- **${source.type}:** ${source.reference} [Voir la source](${source.lien})`;
+                            } else {
+                                fullResponse += `\n- **${source.type}:** ${source.reference}`;
+                            }
+                        });
+                    }
+                    
+                    addMessage(fullResponse, false);
+                }
+            } catch (error) {
+                removeLoading();
+                addMessage('Erreur de connexion. Veuillez réessayer.', false);
+            }
+
+            // Re-enable input
+            sendBtn.disabled = false;
+            userInput.disabled = false;
+            userInput.focus();
+        });
+    </script>
+</body>
+</html>
