@@ -1,6 +1,6 @@
 const fetch = require('node-fetch'); // nécessaire pour Netlify
 
-exports.handler = async function(event, context) {
+export async function handler(event, context) {
     try {
         const body = JSON.parse(event.body);
         const userMessage = body.message;
@@ -54,4 +54,4 @@ exports.handler = async function(event, context) {
             body: JSON.stringify({ error: 'Erreur lors de la communication avec l\'IA.' })
         };
     }
-};
+}
