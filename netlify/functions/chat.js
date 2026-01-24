@@ -1,11 +1,12 @@
-const APP_ID = '6970b76c579f0b3ac47f48b8'; // ✅ Votre APP_ID Base44
-const BASE_URL = 'https://api.base44.com/agents'; // ✅ URL correcte de l'API
+import fetch from 'node-fetch';
+
+const APP_ID = '6970b76c579f0b3ac47f48b8';
+const BASE_URL = 'https://api.base44.com/agents';
 
 export async function handler(event) {
   try {
     const { content } = JSON.parse(event.body);
 
-    // 1️⃣ Créer une nouvelle conversation
     const convRes = await fetch(`${BASE_URL}/conversations`, {
       method: 'POST',
       headers: {
@@ -26,7 +27,6 @@ export async function handler(event) {
     const convData = await convRes.json();
     const conversationId = convData.id;
 
-    // 2️⃣ Envoyer le message utilisateur
     const msgRes = await fetch(`${BASE_URL}/conversations/${conversationId}/messages`, {
       method: 'POST',
       headers: {
@@ -44,13 +44,12 @@ export async function handler(event) {
       throw new Error('Erreur envoi message: ' + text);
     }
 
-    // 3️⃣ Attendre la réponse de l'agent (polling)
     let attempts = 0;
-    const maxAttempts = 30; // 30 secondes max
+    const maxAttempts = 30;
     let assistantResponse = null;
 
     while (attempts < maxAttempts) {
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Attendre 1 sec
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       const getConvRes = await fetch(`${BASE_URL}/conversations/${conversationId}`, {
         headers: { 'x-app-id': APP_ID }
@@ -75,7 +74,7 @@ export async function handler(event) {
     }
 
     if (!assistantResponse) {
-      throw new Error('Pas de réponse de l\'agent après 30 secondes');
+      throw new Error('Pas de réponse après 30 secondes');
     }
 
     return {
