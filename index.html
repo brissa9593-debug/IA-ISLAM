@@ -405,11 +405,9 @@
     </div>
 
     <script>
-        const APP_ID = '6970b76c579f0b3ac47f48b8';
-        const BASE_URL = 'https://api.base44.com/agents';
-        const AGENT_NAME = 'islamic_scholar';
+        // ⚠️ REMPLACEZ PAR VOTRE URL NETLIFY FUNCTION
+        const FUNCTION_URL = 'https://iasabr-islamic.netlify.app/.netlify/functions/chat';
 
-        let conversationId = null;
         let selectedSchool = null;
         let isLoading = false;
 
@@ -438,115 +436,40 @@
             schoolSelector.style.display = 'none';
             inputArea.style.display = 'block';
             schoolInfo.textContent = `École sélectionnée : ${school}`;
-            await createConversation(school);
+            
+            addLoading();
+            await sendMessage(`[École sélectionnée: ${school}] Salamu alaykum, je commence une conversation.`);
         }
 
-        async function createConversation(school) {
+        async function sendMessage(content) {
+            if (!selectedSchool) return;
+
             try {
-                const response = await fetch(`${BASE_URL}/conversations`, {
+                isLoading = true;
+
+                const response = await fetch(FUNCTION_URL, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'x-app-id': APP_ID
+                        'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        agent_name: AGENT_NAME,
-                        metadata: {
-                            name: 'Nouvelle conversation',
-                            school: school
-                        }
-                    })
+                    body: JSON.stringify({ content })
                 });
 
                 if (!response.ok) {
-                    throw new Error('Erreur création conversation');
+                    throw new Error('Erreur serveur');
                 }
 
                 const data = await response.json();
-                conversationId = data.id;
-
-                addLoading();
-                await sendMessage(`[SYSTÈME] L'utilisateur a choisi l'école : ${school}.`);
+                removeLoading();
+                addMessage(data.response, false);
+                
             } catch (error) {
                 console.error(error);
                 removeLoading();
-                addMessage(`Erreur: ${error.message}`, false);
+                addMessage('Erreur: Impossible de contacter le serveur.', false);
+            } finally {
+                isLoading = false;
             }
-        }
-
-        async function sendMessage(content, isUserMessage = false) {
-            if (!conversationId) return;
-
-            try {
-                const response = await fetch(`${BASE_URL}/conversations/${conversationId}/messages`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-app-id': APP_ID
-                    },
-                    body: JSON.stringify({
-                        role: 'user',
-                        content: content
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Erreur envoi message');
-                }
-
-                await pollForResponse();
-            } catch (error) {
-                console.error(error);
-                removeLoading();
-                addMessage(`Erreur: ${error.message}`, false);
-            }
-        }
-
-        async function pollForResponse() {
-            let attempts = 0;
-            const maxAttempts = 60;
-
-            const poll = async () => {
-                try {
-                    const response = await fetch(`${BASE_URL}/conversations/${conversationId}`, {
-                        headers: {
-                            'x-app-id': APP_ID
-                        }
-                    });
-
-                    const data = await response.json();
-                    const messages = data.messages || [];
-                    const lastMessage = messages[messages.length - 1];
-
-                    if (lastMessage && lastMessage.role === 'assistant' && lastMessage.content) {
-                        const hasIncompleteToolCalls = lastMessage.tool_calls?.some(
-                            tc => tc.status === 'running' || tc.status === 'in_progress' || tc.status === 'pending'
-                        );
-
-                        if (!hasIncompleteToolCalls) {
-                            removeLoading();
-                            addMessage(lastMessage.content, false);
-                            isLoading = false;
-                            return;
-                        }
-                    }
-
-                    attempts++;
-                    if (attempts < maxAttempts) {
-                        setTimeout(poll, 1000);
-                    } else {
-                        removeLoading();
-                        addMessage('La réponse prend trop de temps. Veuillez réessayer.', false);
-                        isLoading = false;
-                    }
-                } catch (error) {
-                    console.error(error);
-                    removeLoading();
-                    isLoading = false;
-                }
-            };
-
-            poll();
         }
 
         function addMessage(content, isUser) {
@@ -626,7 +549,6 @@
                 </div>
             `;
             inputArea.style.display = 'none';
-            conversationId = null;
             selectedSchool = null;
             isLoading = false;
         }
@@ -648,7 +570,7 @@
             addLoading();
 
             const messageWithSchool = `[École sélectionnée: ${selectedSchool}]\n\n${question}`;
-            await sendMessage(messageWithSchool, true);
+            await sendMessage(messageWithSchool);
 
             sendBtn.disabled = false;
             userInput.disabled = false;
