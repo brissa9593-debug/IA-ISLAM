@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 
 const APP_ID = process.env.BASE44_APP_ID;
-const BASE_URL = 'https://islam-ia.base44.app/agents';
+const BASE_URL = 'https://islam-ia.base44.app';
 const AGENT_NAME = 'islamic_scholar';
 
 export async function handler(event) {
