@@ -7,13 +7,14 @@ export async function handler(event) {
   try {
     const { content } = JSON.parse(event.body);
 
+    // 1️⃣ Créer une nouvelle conversation
     const convRes = await fetch(`${BASE_URL}/conversations`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-app-id': APP_ID
       },
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         agent_name: 'islamic_scholar',
         metadata: { name: 'Nouvelle conversation' }
       })
@@ -27,6 +28,7 @@ export async function handler(event) {
     const convData = await convRes.json();
     const conversationId = convData.id;
 
+    // 2️⃣ Envoyer le message utilisateur
     const msgRes = await fetch(`${BASE_URL}/conversations/${conversationId}/messages`, {
       method: 'POST',
       headers: {
@@ -44,32 +46,33 @@ export async function handler(event) {
       throw new Error('Erreur envoi message: ' + text);
     }
 
+    // 3️⃣ Polling pour obtenir la réponse
     let attempts = 0;
-    const maxAttempts = 30;
+    const maxAttempts = 30; // 30 secondes max
     let assistantResponse = null;
 
     while (attempts < maxAttempts) {
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
       const getConvRes = await fetch(`${BASE_URL}/conversations/${conversationId}`, {
         headers: { 'x-app-id': APP_ID }
       });
-      
+
       const convData = await getConvRes.json();
       const messages = convData.messages || [];
       const lastMessage = messages[messages.length - 1];
-      
+
       if (lastMessage?.role === 'assistant' && lastMessage.content) {
         const hasIncompleteTools = lastMessage.tool_calls?.some(
           tc => tc.status === 'running' || tc.status === 'in_progress' || tc.status === 'pending'
         );
-        
+
         if (!hasIncompleteTools) {
           assistantResponse = lastMessage.content;
           break;
         }
       }
-      
+
       attempts++;
     }
 
